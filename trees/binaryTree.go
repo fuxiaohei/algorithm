@@ -1,15 +1,54 @@
 package trees
 
+import "strings"
+
 // a binary tree implement.
 // use int value for example.
-
 
 // binary tree node.
 // it saves int value, pointers to left and right node.
 type BinaryTreeNode struct {
-	Value int
-	LeftNode *BinaryTreeNode
+	Value     int
+	LeftNode  *BinaryTreeNode
 	RightNode *BinaryTreeNode
+}
+
+// display tree node with simple structure scene.
+func (btn *BinaryTreeNode) Display(deep int, title string) {
+	println(strings.Repeat("|  ", deep-1)+"+  "+title+" (", btn.Value, ")")
+	if btn.LeftNode != nil {
+		btn.LeftNode.Display(deep+1, "Left")
+	}
+	if btn.RightNode != nil {
+		btn.RightNode.Display(deep+1, "Right")
+	}
+}
+
+// find value in binary tree nodes.
+func (btn *BinaryTreeNode) Find(i int, fn BinaryTreeCompareFn, deep int) int {
+	if btn.Value == i {
+		println(strings.Repeat("|  ", deep-2)+"* Find (", btn.Value, ")")
+		return deep + 1
+	} else {
+		// print root element
+		if deep == 2 {
+			println("+ Root (", btn.Value, ")")
+		}
+	}
+	if fn(i, btn.Value) {
+		// it should be in left node, but no left, so it's not found
+		if btn.LeftNode == nil {
+			return -1
+		}
+		println(strings.Repeat("|  ", deep-1)+"+ Left (", btn.LeftNode.Value, ")")
+		return btn.LeftNode.Find(i, fn, deep+1)
+	}
+
+	if btn.RightNode == nil {
+		return -1
+	}
+	println(strings.Repeat("|  ", deep-1)+"+ Right (", btn.RightNode.Value, ")")
+	return btn.RightNode.Find(i, fn, deep+1)
 }
 
 // insert value into binary tree node.
@@ -58,9 +97,9 @@ func (btn *BinaryTreeNode) ReadMiddle() []int {
 // create new binary tree node with value and children.
 func NewBinaryTreeNode(i int, left *BinaryTreeNode, right *BinaryTreeNode) *BinaryTreeNode {
 	return &BinaryTreeNode{
-		Value:i,
-		LeftNode:left,
-		RightNode:right,
+		Value:     i,
+		LeftNode:  left,
+		RightNode: right,
 	}
 }
 
@@ -71,7 +110,7 @@ type BinaryTreeCompareFn func(i, j int) bool
 // binary tree struct
 type BinaryTree struct {
 	compareFn BinaryTreeCompareFn
-	rootNode *BinaryTreeNode
+	rootNode  *BinaryTreeNode
 }
 
 // insert value into binary tree.
@@ -98,11 +137,29 @@ func (bt *BinaryTree) ReadMiddle() []int {
 	return bt.rootNode.ReadMiddle()
 }
 
+// print binary tree.
+func (bt *BinaryTree) Display() {
+	if bt.rootNode == nil {
+		println("no node in binary tree")
+		return
+	}
+	bt.rootNode.Display(1, "Root")
+}
+
+// find value in binary tree.
+func (bt *BinaryTree) Find(i int) {
+	if bt.rootNode == nil {
+		println("no node in binary tree")
+		return
+	}
+	if bt.rootNode.Find(i, bt.compareFn, 2) < 1 {
+		println("can not find", i, "in binary tree")
+	}
+}
+
 // create new binary tree.
 func NewBinaryTree(compareFn BinaryTreeCompareFn) *BinaryTree {
 	b := new(BinaryTree)
 	b.compareFn = compareFn
 	return b
 }
-
-

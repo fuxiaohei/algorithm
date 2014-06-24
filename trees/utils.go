@@ -10,5 +10,5 @@ func init() {
 }
 
 func RandInt(min int, max int) int {
-	return min + rand.Intn(max - min)
+	return min + rand.Intn(max-min)
 }
