@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	size := 20
+	size := 30
 	randomFind := trees.RandInt(1, size)
 	randomValue := 0
 	//tmpData := []int{308,31,158,559,83,17,46,488,501,577,195,226,478,98,928,79,446,689,120,130}
@@ -35,7 +35,7 @@ func main() {
 
 	println("\n")
 	println("try to find value:", randomValue)
-	//tree.Find(randomValue)
+	tree.Find(randomValue)
 
 	println("\n")
 	tree.Del(randomValue)
@@ -50,5 +50,5 @@ func main() {
 
 	println("\n")
 	println("try to find value:", randomValue)
-	//tree.Find(randomValue)
+	tree.Find(randomValue)
 }

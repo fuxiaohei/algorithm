@@ -9,7 +9,6 @@ import "strings"
 // it saves int value, pointers to left and right node.
 type BinaryTreeNode struct {
 	Value     int
-	ParentNode *BinaryTreeNode
 	LeftNode  *BinaryTreeNode
 	RightNode *BinaryTreeNode
 }
@@ -23,6 +22,67 @@ func (btn *BinaryTreeNode) Display(deep int, title string) {
 	if btn.RightNode != nil {
 		btn.RightNode.Display(deep+1, "Right")
 	}
+}
+
+// delete value in binary node.
+func (btn *BinaryTreeNode) Del(i int, fn BinaryTreeCompareFn, parentNode *BinaryTreeNode) {
+	// try to delete
+	if btn.Value == i {
+		if btn.LeftNode != nil && btn.RightNode != nil {
+			// find the most left node in right child.
+			// it must be on the right of left child.
+			// so it can replace old node, left child keeps left.
+			tmp := btn.RightNode
+			for {
+				if tmp.LeftNode != nil {
+					tmp = tmp.LeftNode
+					continue
+				}
+				break
+			}
+			// delete found value in right child, so set the new right tree to tmp node.
+			btn.RightNode.Del(tmp.Value, fn, btn)
+			// move old child to tmp
+			tmp.LeftNode = btn.LeftNode
+			tmp.RightNode = btn.RightNode
+			// tmp replace old node
+			if parentNode.LeftNode == btn {
+				parentNode.LeftNode = tmp
+			}else {
+				parentNode.RightNode = tmp
+			}
+		}else {
+			// handler one or no child cases.
+			// just swap the left or right one to replace self.
+			// if no child, replace with nil.
+			var tmp *BinaryTreeNode
+			if btn.LeftNode == nil {
+				tmp = btn.RightNode
+			}else if btn.RightNode == nil {
+				tmp = btn.LeftNode
+			}
+			if parentNode.LeftNode == btn {
+				parentNode.LeftNode = tmp
+			}else {
+				parentNode.RightNode = tmp
+			}
+		}
+		return
+	}
+
+	// compare i and node value, try to find on left or right
+	if fn(i, btn.Value) {
+		if btn.LeftNode == nil {
+			return
+		}
+		btn.LeftNode.Del(i, fn, btn)
+		return
+	}
+
+	if btn.RightNode == nil {
+		return
+	}
+	btn.RightNode.Del(i, fn, btn)
 }
 
 // find value in binary tree nodes.
@@ -61,7 +121,7 @@ func (btn *BinaryTreeNode) Insert(i int, fn BinaryTreeCompareFn) {
 		// if left node is nil, add new node.
 		if btn.LeftNode == nil {
 			println("new left node :", i)
-			btn.LeftNode = NewBinaryTreeNode(i, btn, nil, nil)
+			btn.LeftNode = NewBinaryTreeNode(i, nil, nil)
 			return
 		}
 		// make left node to insert.
@@ -73,7 +133,7 @@ func (btn *BinaryTreeNode) Insert(i int, fn BinaryTreeCompareFn) {
 	// insert to right node.
 	if btn.RightNode == nil {
 		println("new right node :", i)
-		btn.RightNode = NewBinaryTreeNode(i, btn, nil, nil)
+		btn.RightNode = NewBinaryTreeNode(i, nil, nil)
 		return
 	}
 	println("insert into right-node:", btn.RightNode.Value)
@@ -96,12 +156,11 @@ func (btn *BinaryTreeNode) ReadMiddle() []int {
 }
 
 // create new binary tree node with value and children.
-func NewBinaryTreeNode(i int, parent , left, right *BinaryTreeNode) *BinaryTreeNode {
+func NewBinaryTreeNode(i int , left, right *BinaryTreeNode) *BinaryTreeNode {
 	return &BinaryTreeNode{
 		Value:     i,
 		LeftNode:  left,
 		RightNode: right,
-		ParentNode:parent,
 	}
 }
 
@@ -120,7 +179,7 @@ func (bt *BinaryTree) Insert(i int) {
 	// if root node is missing, create this one for root.
 	if bt.rootNode == nil {
 		println("new root :", i)
-		bt.rootNode = NewBinaryTreeNode(i, nil, nil, nil)
+		bt.rootNode = NewBinaryTreeNode(i, nil, nil)
 		println("insert done ----------")
 		return
 	}
@@ -159,69 +218,12 @@ func (bt *BinaryTree) Find(i int) {
 	}
 }
 
+// delete value in binary tree.
 func (bt *BinaryTree) Del(i int) {
-	// try to find node.
-	node := bt.rootNode.Find(i, bt.compareFn, 2)
-	if node == nil {
-		println("can not find", i, "in binary tree")
-	}
-	// if there is no children in this node, delete directly.
-	if node.LeftNode == nil && node.RightNode == nil {
-		if node == node.ParentNode.LeftNode {
-			node.ParentNode.LeftNode = nil
-			return
-		}
-		if node == node.ParentNode.RightNode {
-			node.ParentNode.RightNode = nil
-			return
-		}
-	}
-
-	// if there is left child in this node.
-	// the left child must be on left of parent node.
-	// move it up.
-	if node.RightNode == nil && node.LeftNode != nil {
-		if node == node.ParentNode.LeftNode {
-			node.ParentNode.LeftNode = node.LeftNode
-		}else {
-			node.ParentNode.RightNode = node.LeftNode
-		}
-		node.LeftNode.ParentNode = node.ParentNode
+	if bt.rootNode == nil {
 		return
 	}
-
-	// same to only left child case.
-	// the right child must be on the right of parent node.
-	// move it up.
-	if node.LeftNode == nil && node.RightNode != nil {
-		if node == node.ParentNode.LeftNode {
-			node.ParentNode.LeftNode = node.RightNode
-		}else {
-			node.ParentNode.RightNode = node.RightNode
-		}
-		node.RightNode.ParentNode = node.ParentNode
-		return
-	}
-
-	// if left and right child are existing, try to find last left node in right child.
-	// the last left one is the min value in right child but over left child value.
-	// so it can replace deleting node. its left node is old left child value.
-	leftLast := node.RightNode
-	for {
-		if leftLast.LeftNode != nil {
-			leftLast = leftLast.LeftNode
-		}else {
-			break
-		}
-	}
-	if node == node.ParentNode.LeftNode {
-		node.ParentNode.LeftNode = leftLast
-
-	}else {
-		node.ParentNode.RightNode = leftLast
-	}
-	leftLast.ParentNode = node.ParentNode
-	leftLast.LeftNode = node.LeftNode
+	bt.rootNode.Del(i, bt.compareFn, nil)
 }
 
 // create new binary tree.
